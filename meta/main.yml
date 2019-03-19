@@ -1,0 +1,21 @@
+galaxy_info:
+  author: Kevin Gallagher (@ageis)
+  description: Lookup plugin which reads data from an INI file without section headers. Uses ConfigObj instead of ConfigParser
+  company: n/a
+  issue_tracker_url: https://github.com/ageis/ansible-alt-ini-lookup-plugin/issues
+  license: BSD
+  min_ansible_version: 2.79
+  github_branch: master
+  platforms:
+    - name: Debian
+      versions:
+      - buster
+      - sid
+      - stretch
+    - name: Ubuntu
+      versions:
+      - bionic
+      - cosmic
+      - xenial
+  galaxy_tags: ['INI file', 'sans section headers', 'configobj', 'lookup plugin']
+dependencies: []

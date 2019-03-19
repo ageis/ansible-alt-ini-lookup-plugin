@@ -1,42 +1,42 @@
-# (c) 2015, Yannig Perre <yannig.perre(at)gmail.com>
-# (c) 2017 Ansible Project
+# (c) 2019 Kevin Gallagher <kevingallagher@gmail.com>
+# (c) 2017 Yannig Perre <yannig.perre(at)gmail.com>
+# (c) 2019 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 DOCUMENTATION = """
-    lookup: ini_file
+    lookup: alt_ini
     author: Kevin Gallagher <kevingallagher@gmail.com>
     version_added: "2.0"
-    short_description: read data from a ini file
+    short_description: read data from a ini file without section headers
     description:
       - "The ini lookup reads the contents of a file in INI format C(key1=value1).
         This plugin retrieve the value on the right side after the equal sign C('=') of a given section C([section])."
-      - "You can also read a property file which - in this case - does not contain section."
     options:
       _terms:
-        description: The key(s) to look up
+        description: khe key(s) to look up
         required: True
       file:
-        description: Name of the file to load
+        description: name of the file to load
         default: ansible.ini
       section:
         default: global
-        description: section where to lookup for key.
+        description: section to look within for the key
       encoding:
         default: utf-8
-        description: Text encoding to use.
+        description: text encoding to use
       default:
         description: return value if the key is not in the ini file
         default: ''
 """
 
 EXAMPLES = """
-- debug: msg="User in integration is {{ lookup('ini_file', 'user section=integration file=users.ini') }}"
+- debug: msg="User in integration is {{ lookup('alt_ini', 'user section=integration file=users.ini') }}"
 
 - debug:
     msg: "{{ item }}"
-  with_ini_file:
+  with_alt_ini:
     - value[1-2]
     - section: section1
     - file: "lookup.ini"
@@ -93,9 +93,6 @@ class LookupModule(LookupBase):
 
     def run(self, terms, variables=None, **kwargs):
 
-        #self.cp = configparser.ConfigParser()
-        #self.cp = configobj.ConfigObj()
-
         ret = []
         for term in terms:
             params = _parse_params(term)
@@ -104,7 +101,7 @@ class LookupModule(LookupBase):
             paramvals = {
                 'file': 'ansible.ini',
                 'default': None,
-                'section': "renewalparams",
+                'section': "global",
                 'encoding': 'utf-8'
             }
 
@@ -117,11 +114,11 @@ class LookupModule(LookupBase):
                     paramvals[name] = value
             except (ValueError, AssertionError) as e:
                 raise AnsibleError(e)
-            
+
             try:
                 self.cp = ConfigObj(paramvals['file'], encoding=paramvals['encoding'], file_error=True)
             except (ConfigObjError, IOError) as e:
-                raise AnsibleError('Could not read "%s": %s' % (filename, e))
+                raise AnsibleError('Could not read "%s": %s' % (paramvals['file'], e))
 
             # Retrieve file path
             path = self.find_file_in_search_path(variables, 'files', paramvals['file'])
@@ -134,7 +131,7 @@ class LookupModule(LookupBase):
             contents = to_text(contents, errors='surrogate_or_strict')
             config.write(contents)
             config.seek(0, os.SEEK_SET)
-            sec = self.cp[paramvals['section']] 
+            sec = self.cp[paramvals['section']]
             var = sec[key]
             if var is not None:
                 if isinstance(var, MutableSequence):
